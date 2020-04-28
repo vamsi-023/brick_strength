@@ -1,0 +1,68 @@
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from tkinter import *
+import tkinter as tk
+from tkinter.ttk import *
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt  
+from sklearn.model_selection import train_test_split 
+from sklearn.linear_model import LinearRegression
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
+from PIL import *
+from PIL import ImageTk, Image
+import image
+from tkinter import filedialog
+import PIL
+dataset = pd.read_csv('DATA1.csv')
+root = Tk()  
+root.title("BRICK COMPRESSIVE STRENGTH PREDICTOR") 
+def open_img(): 
+    global pr
+    x = openfilename() 
+    img1 = Image.open(x) 
+    mean=np.mean(img1)
+    median=np.median(img1)
+    standard_deviation=np.std(img1)
+    n=[[mean,median,standard_deviation]]
+    X = dataset.iloc[:,0:3].values
+    y = dataset.iloc[:,3].values
+    scaler_x = MinMaxScaler()
+    scaler_y = MinMaxScaler()
+    (scaler_x.fit(X))
+    xscale=scaler_x.transform(X)
+    y=np.reshape(y, (-1,1))
+    (scaler_y.fit(y))
+    yscale=scaler_y.transform(y)
+    X_train,X_test,y_train,y_test = train_test_split(X,y,test_size = 0.2)
+    regressor = LinearRegression()  
+    regressor.fit(X_train, y_train) 
+    y_pred = regressor.predict(X_test)
+    df = pd.DataFrame({'Actual': y_test.flatten(), 'Predicted': y_pred.flatten()})
+    pr=float(regressor.predict(n))
+    label = tk.Label(root, fg="orange")
+    label.config(text='The Predicted Compressive Strength of the Brick is %.3f'%(pr)+' MPa', font=("Times New Roman", 15))
+    label.place(x=430,y=350)
+
+def openfilename(): 
+    filename = filedialog.askopenfilename(title ='"pen') 
+    return filename 
+
+root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
+root.resizable(width = True, height = True)
+
+canvas = tk.Canvas(root, width = 1080, height = 800)
+canvas.pack()
+photo =ImageTk.PhotoImage(Image.open('13.png'))
+canvas.create_image(0, 0,  anchor=NW, image=photo)
+lbl=tk.Label(root, fg= 'black')
+lbl.config(text="BRICK COMPRESSIVE STRENGTH PREDICTOR", font=("Monotype Corsiva", 30))
+lbl.place(x=300, y=70)
+btn = Button(root, text =' UPLOAD IMAGE & PREDICT', command = open_img)
+btn.place(x=570,y=400)
+lbl1=tk.Label(root, fg= 'green')
+lbl1.config(text='Done!', font=("Copperplate Gothic Light", 15))
+lbl1.place(x=950, y=550)
+root.mainloop() 
+
